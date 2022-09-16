@@ -1,0 +1,372 @@
+# 向量x缺失值是否小于percent(0-1) ================================================================================================
+# 输入值：x: 
+#           class: vector
+#
+# 输入值：percent: 
+#           class: numeric
+#           range: 0-1
+#
+# 返回值：
+#           class: logical vector
+#          length: 1
+na.less <- function(x, percent){
+  a = sum(is.na(x))
+  b = length(x)
+  c = a/b
+  result = c <= percent
+  result
+}
+
+
+# 将主检时间转换为date ================================================================================================
+# 输入值：a:
+#          class: numeric OR character vector
+#          numeric形如：40208
+#          character形如：'2021-12-3'
+#
+# 返回值：
+#           class: date
+#          length: length(a)
+to.date.zhujian <- function(a){
+  
+  a2 = if(is.numeric(a)) {
+    
+    as.Date(a, origin = "1899-12-30")
+    
+  } else if(is.character(a)){
+    
+    as.Date(a)
+    
+  } else{
+    
+    a
+    
+  }
+}
+
+
+# 将体检时间转换为datetime ================================================================================================
+# 输入值：a:
+#          class: 一串带小数点的数字(比如: 40208.64507)
+#                 数字的格式要求: numeric OR character vector
+#
+# 返回值：
+#          class: POSIXct
+#         length: length(a)
+to.date.tijian <- function(a){
+  
+  a2 = if(is.numeric(a)) {
+    
+    openxlsx::convertToDateTime(a)
+    
+  } else if(is.character(a)){
+    
+    as.POSIXct(a)
+    
+  } else{
+    
+    a
+    
+  }
+  
+  a2
+}
+
+
+## 计算每组人的生存时间（需手动分组group_by）=======================================================================================================
+# 输入值：date:
+#          class: date OR numeric; 
+#                 随访日期; 可以是年-月-日，或者单独的年,月,日.
+#
+# 输入值：outcome:
+#          class: numeric
+#                 只有两个取值, 0: 没有发生结局; 1: 发生了结局.
+#
+# 返回值：
+#          class: numeric
+#         length: 1
+#
+# 注意：
+#         在使用之前需要用group_by(唯一ID)对研究对象分组
+time.to.event <- function(date,outcome) {
+  if(1 %in% outcome) min(date[outcome==1]) - min(date)
+  else max(date) -  min(date)
+}
+
+
+
+# 传入感兴趣的自变量和协变量，输出一个cox模型的公式 ========================================================================================
+# 默认感兴趣的自变量是 pm2.5
+# 输入值：x:
+#          class: character
+#                 感兴趣的自变量x
+#
+# 输入值：x.covars:
+#          class: character
+#                 其他协变量
+#
+# 输入值：frailty:
+#          class: character
+#                 frailty cox中的变量
+#                 详情参考：https://data.princeton.edu/pop509/frailtyr
+#
+# 返回值：
+#          class: formula
+#                 一个cox模型的formula,形式如下(无frailty项):
+#                 Surv(time_to_event, final_cvd_dm) ~ x.air + x.covars
+cox.formula <- function(x, x.covars, frailty = NULL){
+  
+  y = 'Surv(time_to_event, final_cvd_dm) ~ '
+  x.covars = unlist(x.covars)
+  
+  x2 = paste0(c(x, x.covars, frailty), collapse = '+')
+  
+  f = paste0(y, x2) %>% as.formula()
+  f
+}
+
+
+
+## 获取cox回归的结果 ================================================================
+# 输入值：fit:
+#          class: coxph
+#
+# 返回值：
+#          class: tibble
+#                 返回感兴趣变量的b, HR, p等变量
+#
+# 注意：
+#         在使用之前需要加载tidymodels和ehahelper包
+#         ehahelper包只能从github安装：remotes::install_github("junkka/ehahelper")
+#         只会输出formula中第一个变量的结果
+#         第一个变量的名字只能包含数字，字母，下划线或者英文状态下的句号
+cox.result <- function(fit){
+  
+  if(!class(fit) %in% c('coxph', 'coxme')){
+    a = tibble(term = 'not a coxph or coxme')
+    return(a)
+  }
+  
+  formula.terms = 
+    
+    if(class(fit) == 'coxph'){
+      
+      as.character(fit$formula)
+      
+    } else {
+      
+      as.character(fit$formula)[1] %>%                # 第一个包含着formula
+        str_split(pattern = '(?<=~)\\s|\\s(?=~)') %>% # 使用~前后的空格将formula拆分
+        unlist() %>% 
+        `[`(c(2,1,3))                                 # 调整元素顺序让coxme和coxph中的元素一致
+    }
+  
+  air.pollution = formula.terms[3] %>% str_extract('[\\w\\.]+') # 匹配第一个+号之前的污染物
+  
+  model.result0 = tidy(fit)
+  
+  model.result1 = model.result0 %>% 
+    mutate(
+      HR = exp(estimate),
+      HR.LOW = exp(estimate - 1.96*std.error),
+      HR.UP  = exp(estimate + 1.96*std.error),
+      HR.POS = ifelse(HR >= 1, 'positive', 'negative'),
+      p.sig = ifelse(p.value <= 0.05, 'yes', 'no'),
+      x.vars = air.pollution) %>% 
+    filter(grepl(air.pollution, term)) %>% 
+    select(x.vars, term, HR.POS, p.sig, estimate, std.error, HR:HR.UP, p.value)
+  
+  model.result1
+  
+}
+
+
+
+# 使用四分位数将连续型变量转化为四分类变量===============================================
+# 输入值：x:
+#          class: numeric
+#
+# 返回值：
+#          class: character
+#                 使用25th, 50th和75th把输入的数值转换成4个组别
+#
+# 注意：
+#         在使用之前需要加载glue和dplyr包
+con.to.q4 <- function(x){
+  
+  q = quantile(x, c(.25, .50, .75), na.rm = T)
+  q1 = q[1]
+  q2 = q[2]
+  q3 = q[3]
+  
+  q1.text   = format(round(q1,      digits=2), nsmall = 2) 
+  q1.2.text = format(round(q1+0.01, digits=2), nsmall = 2) 
+  q2.text   = format(round(q2,      digits=2), nsmall = 2) 
+  q2.2.text = format(round(q2+0.01, digits=2), nsmall = 2) 
+  q3.text   = format(round(q3,      digits=2), nsmall = 2) 
+  
+  group_1 = glue('<= {q1.text}')
+  group_2 = glue('{q1.2.text} - {q2.text}')
+  group_3 = glue('{q2.2.text} - {q3.text}')
+  group_4 = glue('> {q3.text}')
+  
+  x2 = case_when(
+    x <= q1          ~ group_1,
+    x <= q2 & x > q1 ~ group_2, 
+    x <= q3 & x > q2 ~ group_3,
+    x >  q3          ~ group_4)
+  
+  x2 = as.character(x2)
+  
+  x3 = factor(x2, levels = c(group_1, group_2, group_3, group_4))
+  
+  x3
+}
+
+
+
+
+
+# 批量输出cox回归结果 =======================================================================================================================
+# 输入值：x.list:
+#          class: character vector
+#                 储存着所有的自变量x, 会依次将x.list中的元素纳入cox模型中
+#
+# 输入值：data:
+#          class: data.frame
+#                 拟合cox模型用的data.frame
+# 返回值：
+#          class: data.frame
+#                 使用25th, 50th和75th把输入的数值转换成4个组别
+#
+# 注意：
+#         在使用之前需要加载glue和dplyr包
+cox.batch <- function(x.list, frailty = NULL, coxme = FALSE, data){
+  
+  y          = 'Surv(time_to_event, final_cvd_dm) ~ '             # cox模型中的y
+  
+  x.covars.2 = c('sex', 'age')                                    # 纳入Model 2 的变量
+  x.covars.3 = c('edu', '体育锻炼m', '吸烟m', '饮酒m')
+  x.covars.4 = c('bmi_group', 'waist', 'hip', 'rate', 'LDLC', 'TG', 'HDLC', 'TC', 'Cr', 'UA')
+  x.covars.5 = c("bmi_group", "waist", "hip", "TG", "HDLC", "Cr") # lasso选择的变量
+  
+  
+  dat.loop =                                   # 生成不同模型的cox.formula
+    tibble(x = x.list) %>% 
+    rowwise() %>%                              # 一定要设置行计算,否则所有污染物都会进入cox.formula
+    mutate(cox.formula2 = list(cox.formula(x = x, x.covars = x.covars.2, frailty = frailty)),                                 # model 2
+           cox.formula3 = list(cox.formula(x = x, x.covars = c(x.covars.2, x.covars.3), frailty = frailty)),                  # model 3
+           cox.formula4 = list(cox.formula(x = x, x.covars = c(x.covars.2, x.covars.3, x.covars.4), frailty = frailty)),      # model 4
+           cox.formula5 = list(cox.formula(x = x, x.covars = c(x.covars.2, x.covars.3, x.covars.5), frailty = frailty))) %>%  # model 5
+    ungroup() %>% 
+    pivot_longer(c(cox.formula2: cox.formula5), names_to = 'formula.type', values_to = 'cox.formula')      # 转换为长数据
+  
+  
+  if(coxme == T){
+    
+    dat.model0 = dat.loop %>%                  # 生成frailty cox model
+      mutate(cox.model = map(cox.formula, coxme, data = data))
+    
+  } else {
+    
+    dat.model0 = dat.loop %>%                  # 生成普通cox model
+      mutate(cox.model = map(cox.formula, coxph, data = data))
+  }
+  
+  dat.model1 = dat.model0 %>%                  # 提取cox.result
+    mutate(cox.result = map(cox.model, cox.result))
+  
+  dat.model2 = dat.model1 %>%                  # 将cox.result从list中提取出来
+    unnest(cox.result)
+  
+  dat.model3 = dat.model2 %>%                  # 选中需要的cox结果
+    select(-c(x, cox.formula, cox.model))
+  
+  dat.model3
+}
+
+
+
+# 批量输出不同基线的cox和frailty cox模型的结果======================================================
+# 输入值：x:
+#          class: character vector
+#                 储存着所有的自变量x, 会依次将x中的元素传入cox.batch()中
+#                 参数具体含义见cox.batch()中的x.list参数
+#
+# 输入值：frailty:
+#          class: character vector
+#         length: 1
+#                 会传入cox.batch()中，cox.batch()会把它传入cox.formula()中
+#                 参数具体含义见cox.formula()
+#
+# 输入值：baseline:
+#          class: character vector
+#         length: 1
+#                 自己指定输入的基线数据是哪年，比如baseline = '2009-2015'
+#
+# 输入值：dat0:
+#          class: data.frame
+#                 拟合模型所用数据
+#
+# 返回值：
+#          class: data.frame
+#                 coxph和coxme的模型结果
+#
+# 注意：
+#         在使用之前需要加载glue, dplyr, tidymodels, ehahelper包
+cox.baseline <- function(x, frailty, baseline, dat0){
+  
+  # Cox ===
+  
+  ## 原始数据
+  cox.dat0  = cox.batch(x.list = x, data = dat0)
+  best.dat0 = cox.dat0 %>% filter(HR.POS == 'positive', p.sig == 'yes')          
+  
+  cox.dat0.1= cox.dat0 %>% mutate(data = '01.原始数据', model = 'coxph')
+  
+  ## 删除基线发病人群
+  dat.no.base.event = dat0 %>% filter(time_to_event != 0)
+  dat1              = dat.no.base.event
+  
+  cox.dat1  = cox.batch(x.list = x, data = dat1)
+  best.dat1 = cox.dat1 %>% filter(HR.POS == 'positive', p.sig == 'yes')          
+  
+  cox.dat1.1=cox.dat1 %>% mutate(data = '02.删除基线发病人群', model = 'coxph')
+  
+  ## 删除离退休人员
+  dat.no.tuixiu = dat.no.base.event %>% filter(!grepl('离退', 所属单位))
+  dat2          = dat.no.tuixiu
+  
+  cox.dat2  = cox.batch(x.list = x, data = dat2)
+  best.dat1 = cox.dat2 %>% filter(HR.POS == 'positive', p.sig == 'yes')   
+  
+  cox.dat2.1=cox.dat2 %>% mutate(data = '03.删除离退休人员', model = 'coxph')
+  
+  # Frailty Cox  ===
+  
+  ## 原始数据
+  fcox.dat0  = cox.batch(x.list = x, data = dat0, frailty = frailty)
+  fbest.dat0 = fcox.dat0 %>% filter(HR.POS == 'positive', p.sig == 'yes')          
+  
+  fcox.dat0.1=fcox.dat0 %>% mutate(data = '01.原始数据', model = 'coxme')
+  
+  ## 删除基线发病人群
+  fcox.dat1 = cox.batch(x.list = x, data = dat1, frailty = frailty)
+  fbest.dat1= fcox.dat1 %>% filter(HR.POS == 'positive', p.sig == 'yes')          
+  
+  fcox.dat1.1=fcox.dat1 %>% mutate(data = '02.删除基线发病人群', model = 'coxme')
+  
+  ## 删除离退休人员
+  fcox.dat2 = cox.batch(x.list = x, data = dat2, frailty = frailty)
+  fbest.dat1= fcox.dat2 %>% filter(HR.POS == 'positive', p.sig == 'yes')   
+  
+  fcox.dat2.1=fcox.dat2 %>% mutate(data = '03.删除离退休人员', model = 'coxme')
+  
+  # 结果汇总 ===
+  cox.final = bind_rows(cox.dat0.1, cox.dat1.1, cox.dat2.1, fcox.dat0.1, fcox.dat1.1, fcox.dat2.1) %>% 
+    mutate(baseline = baseline)
+}
+
+
+
+
