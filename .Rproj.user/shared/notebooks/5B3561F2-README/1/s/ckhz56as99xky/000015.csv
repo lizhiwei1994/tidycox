@@ -1,1 +1,4 @@
+"0","library(tidycox)"
 "0",""
+"0","df %>% group_by(id) %>% "
+"0","  mutate(time = cox.time(date = date, outcome = outcome))"

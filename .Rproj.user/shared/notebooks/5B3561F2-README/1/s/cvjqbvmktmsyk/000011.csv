@@ -1,0 +1,4 @@
+"0","library(survival)"
+"0","model_1 = coxph(Surv(time, status) ~ x1+x2, test1) "
+"2","Warning: Loglik converged before variable  1,2 ; coefficient may be infinite. "
+"0","cox.result(model_1)"

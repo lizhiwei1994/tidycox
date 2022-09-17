@@ -1,1 +1,0 @@
-{"frames":[{"func":"cox.result(model_2)","file":"","line_number":0,"end_line_number":0,"character_number":0,"end_character_number":0},{"func":"base::diag(fit$var)","file":"","line_number":18,"end_line_number":18,"character_number":7,"end_character_number":67}],"message":"Error in as.integer(x) : \n  cannot coerce type 'S4' to vector of type 'integer'\n"}

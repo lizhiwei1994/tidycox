@@ -92,7 +92,6 @@ with the `mutate()` function to calculate the survival time `time`. The
 survival time of the same `id` is the same.
 
 ``` r
-# devtools::install_github('lizhiwei1994/tidycox')
 library(tidycox)
 
 df %>% group_by(id) %>% 
@@ -190,21 +189,45 @@ The function `cox.result()` is somewhat similar to the
 `generics` package, but returns more content than it does and is more
 compatible.
 
+`cox.result()` will only return the result of **the first independent
+variable** in the formula, which allows us to quickly obtain the result
+of the independent variable of interest.
+
+First create a simple dataset.
+
 ``` r
-library(survival)
-# Create the simplest test data set 
 test1 <- list(time=c(4,3,1,1,2,2,3), 
               status=c(1,1,1,0,1,1,0), 
-              x=c(0,2,1,1,1,0,0), 
+              x1=c(0,2,1,1,1,0,0), 
+              x2=c(1,2,1,2,1,0,0),
               sex=c(0,0,0,0,1,1,1)) 
-# Fit a coxph model 
-model_1 = coxph(Surv(time, status) ~ x , test1) 
+```
 
+Then we fit a cox model of class `coxph` and extract the results with
+`cox.result()`. This will return the result of the independent variable
+`x1`.
+
+> Note that the order of the independent variables is `x1+x2`.
+
+``` r
+library(survival)
+model_1 = coxph(Surv(time, status) ~ x1+x2, test1) 
 cox.result(model_1)
 #> # A tibble: 1 × 10
-#>   x.vars term  HR.POS   p.sig estimate std.error    HR HR.LOW HR.UP p.value
-#>   <chr>  <chr> <chr>    <chr>    <dbl>     <dbl> <dbl>  <dbl> <dbl>   <dbl>
-#> 1 x      x     positive no       0.461     0.563  1.59  0.526  4.78   0.413
+#>   x.vars term  HR.POS   p.sig estimate std.error         HR HR.LOW HR.UP p.value
+#>   <chr>  <chr> <chr>    <chr>    <dbl>     <dbl>      <dbl>  <dbl> <dbl>   <dbl>
+#> 1 x1     x1    positive no        20.6    23841. 878395377.      0   Inf   0.999
+```
+
+If we turn `x1+x2` into `x2+x1`, we will return the result of `x2`.
+
+``` r
+model_1 = coxph(Surv(time, status) ~ x2+x1, test1) 
+cox.result(model_1)
+#> # A tibble: 1 × 10
+#>   x.vars term  HR.POS   p.sig estimate std.error         HR HR.LOW HR.UP p.value
+#>   <chr>  <chr> <chr>    <chr>    <dbl>     <dbl>      <dbl>  <dbl> <dbl>   <dbl>
+#> 1 x2     x2    negative no       -20.4    23841.    1.39e-9      0   Inf   0.999
 ```
 
 `cox.result()` returns a `tibble` which contains `10` variables
@@ -232,15 +255,30 @@ use the
 [coxme](https://cran.r-project.org/web/packages/coxme/index.html)
 package to build a frailty cox model will return a `coxme` object.
 
+First we fit a frailty cox model using the `coxme` package.
+
 ``` r
-####### EEEEEEEEEEEEEEEEEEEEEEEEEE #####################
 library(coxme)
-# Fit a coxme model 
 model_2 <- coxme(Surv(time, status) ~ ph.ecog + age + (1|inst), lung)
+```
 
-# broom::tidy(model_2)
+If you try to extract the result of `model_2` with `tidy()` it will give
+an error. Because the `tidy()` function can be used for `coxph` objects
+but not for `coxme` objects.
 
+``` r
+broom::tidy(model_2) 
+```
+
+The results of `model_2` can be successfully extracted using
+`cox.result()`.
+
+``` r
 cox.result(model_2)
+#> # A tibble: 1 × 10
+#>   x.vars  term    HR.POS   p.sig estimate std.error    HR HR.LOW HR.UP  p.value
+#>   <chr>   <chr>   <chr>    <chr>    <dbl>     <dbl> <dbl>  <dbl> <dbl>    <dbl>
+#> 1 ph.ecog ph.ecog positive yes      0.473     0.119  1.61   1.27  2.03 0.000072
 ```
 
 ## :page_with_curl: Acknowledgements

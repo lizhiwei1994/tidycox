@@ -106,18 +106,35 @@ cox.formula(y = y, x = x, x.covars = x.covars, frailty = frailty)
 
 The function `cox.result()` is somewhat similar to the [`tidy()`](https://rdrr.io/cran/generics/man/tidy.html) function in the `generics` package, but returns more content than it does and is more compatible.
 
+`cox.result()` will only return the result of **the first independent variable** in the formula, which allows us to quickly obtain the result of the independent variable of interest.
+
+First create a simple dataset.
+
 ```{r}
-library(survival)
-# Create the simplest test data set 
 test1 <- list(time=c(4,3,1,1,2,2,3), 
               status=c(1,1,1,0,1,1,0), 
-              x=c(0,2,1,1,1,0,0), 
+              x1=c(0,2,1,1,1,0,0), 
+              x2=c(1,2,1,2,1,0,0),
               sex=c(0,0,0,0,1,1,1)) 
-# Fit a coxph model 
-model_1 = coxph(Surv(time, status) ~ x , test1) 
+```
 
+Then we fit a cox model of class `coxph` and extract the results with `cox.result()`. This will return the result of the independent variable `x1`.
+
+> Note that the order of the independent variables is `x1+x2`.
+
+```{r}
+library(survival)
+model_1 = coxph(Surv(time, status) ~ x1+x2, test1) 
 cox.result(model_1)
 ```
+
+If we turn `x1+x2` into `x2+x1`, we will return the result of `x2`.
+
+```{r}
+model_1 = coxph(Surv(time, status) ~ x2+x1, test1) 
+cox.result(model_1)
+```
+
 `cox.result()` returns a `tibble` which contains `10` variables respectively.
 
 > **x.vars**: `character` vector. Name of the independent variable of interest.
@@ -134,16 +151,25 @@ cox.result(model_1)
 
 `cox.result()` can also extract results with object class `coxme`, which cannot be done in the [`tidy()`](https://rdrr.io/cran/generics/man/tidy.html) function. If you use the [coxme](https://cran.r-project.org/web/packages/coxme/index.html) package to build a frailty cox model will return a `coxme` object.
 
-```{r eval=FALSE}
+
+First we fit a frailty cox model using the `coxme` package.
+
+```{r message=FALSE}
 library(coxme)
-# Fit a coxme model 
 model_2 <- coxme(Surv(time, status) ~ ph.ecog + age + (1|inst), lung)
-
-# broom::tidy(model_2)
-
-cox.result(model_2)
 ```
 
+If you try to extract the result of `model_2` with `tidy()` it will give an error. Because the `tidy()` function can be used for `coxph` objects but not for `coxme` objects.
+
+```{r eval=FALSE}
+broom::tidy(model_2) 
+```
+
+The results of `model_2` can be successfully extracted using `cox.result()`.
+
+```{r message=FALSE}
+cox.result(model_2)
+```
 
 ## :page_with_curl: Acknowledgements
 
