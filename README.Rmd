@@ -136,7 +136,6 @@ cox.result(model_1)
 `cox.result()` can also extract results with object class `coxme`, which cannot be done in the [`tidy()`](https://rdrr.io/cran/generics/man/tidy.html) function. If you use the [coxme](https://cran.r-project.org/web/packages/coxme/index.html) package to build a frailty cox model will return a `coxme` object.
 
 ```{r eval=FALSE}
-####### EEEEEEEEEEEEEEEEEEEEEEEEEE #####################
 library(coxme)
 # Fit a coxme model 
 model_2 <- coxme(Surv(time, status) ~ ph.ecog + age + (1|inst), lung)

@@ -3,17 +3,17 @@
     "path": "E:/A/project/package/tidycox/README.Rmd",
     "project_path": "README.Rmd",
     "type": "r_markdown",
-    "hash": "3877238559",
+    "hash": "0",
     "contents": "",
-    "dirty": false,
+    "dirty": true,
     "created": 1663386612740.0,
     "source_on_save": false,
     "relative_order": 4,
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "22,61",
-        "scrollLine": "14",
+        "cursorPosition": "138,0",
+        "scrollLine": "136",
         "last_setup_crc32": "FA68C3CF71bfddc1",
         "docOutlineVisible": "0"
     },
@@ -22,7 +22,7 @@
     "encoding": "GB2312",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1663395830785,
+    "last_content_update": 1663399710592,
     "read_only": false,
     "read_only_alternatives": []
 }

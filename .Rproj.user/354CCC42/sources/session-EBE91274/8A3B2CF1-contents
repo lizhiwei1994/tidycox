@@ -18,9 +18,10 @@
 #' `HR.UP`: numeric vector. Upper limit of 95% confidence interval.
 #' `p.value`: numeric vector. P value of x.vars.
 #' @importFrom stringr str_split str_extract
-#' @importFrom dplyr filter select
-#' @importFrom coxme fixef diag
+#' @importFrom dplyr filter select mutate as_tibble
+#' @importFrom coxme fixef
 #' @importFrom broom tidy
+#' @importFrom bdsmatrix diag
 #' @export
 cox.result <- function(fit){
 
@@ -56,7 +57,7 @@ cox.result <- function(fit){
       estimate <- coxme::fixef(fit)
       nvar <- base::length(estimate)
       nfrail <- base::nrow(fit$var) - nvar
-      std.error <- base::sqrt(base::diag(fit$var)[nfrail + 1:nvar])
+      std.error <- base::sqrt(bdsmatrix::diag(fit$var)[nfrail + 1:nvar])
       statistic<- base::round(estimate/std.error, 2)
       p.value<- base::signif(1 - stats::pchisq((estimate/std.error)^2, 1), 2)
       table=base::data.frame(base::cbind(estimate,std.error,statistic,p.value))
@@ -74,7 +75,8 @@ cox.result <- function(fit){
       p.sig = ifelse(p.value <= 0.05, 'yes', 'no'),
       x.vars = air.pollution) %>%
     filter(grepl(air.pollution, term)) %>%
-    select(x.vars, term, HR.POS, p.sig, estimate, std.error, HR:HR.UP, p.value)
+    select(x.vars, term, HR.POS, p.sig, estimate, std.error, HR:HR.UP, p.value) %>%
+    as_tibble()
 
   model.result1
 

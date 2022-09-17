@@ -1,9 +1,0 @@
-"0","y = 'Surv(time, status)'"
-"0","x = 'x_interest'"
-"0","x.covars = c('covars_1', 'covars_2', 'covars_3')"
-"0",""
-"0","cox.formula(y = y, x = x, x.covars = x.covars)"
-"1","Surv(time, status) ~ x_interest + covars_1 + covars_2 + covars_3
-"
-"1","<environment: 0x000001afd63524f8>
-"
