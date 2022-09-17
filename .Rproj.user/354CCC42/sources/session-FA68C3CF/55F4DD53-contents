@@ -29,7 +29,7 @@ The [tidymodel](https://cran.r-project.org/web/packages/tidymodels/index.html) a
 ## :arrow_double_down: Installation
 
 You can install the development version of **tidycox** from Github with:
-```{r }
+```{r eval=FALSE}
 devtools::install_github('lizhiwei1994/tidycox')
 ```
 

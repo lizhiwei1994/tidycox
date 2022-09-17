@@ -40,7 +40,7 @@ cox.result <- function(fit){
         `[`(c(2,1,3))
     }
 
-  air.pollution = formula.terms[3] %>% str_extract('[\\w\\.]+')
+  air.pollution = formula.terms[3] %>% stringr::str_extract('[\\w\\.]+')
 
   model.result0 = tidy(fit)
 
