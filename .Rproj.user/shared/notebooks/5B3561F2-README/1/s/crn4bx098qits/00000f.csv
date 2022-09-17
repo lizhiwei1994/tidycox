@@ -1,2 +1,0 @@
-"0","df %>% group_by(id) %>% "
-"0","  mutate(time = cox.time(date = follow_up, outcome = outcome))"
