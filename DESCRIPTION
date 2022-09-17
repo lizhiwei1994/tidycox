@@ -17,4 +17,5 @@ RoxygenNote: 7.2.1
 Imports: 
     dplyr,
     magrittr,
-    stats
+    stats,
+    stringr
