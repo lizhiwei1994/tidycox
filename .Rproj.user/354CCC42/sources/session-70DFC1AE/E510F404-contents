@@ -65,7 +65,7 @@ df = data.frame(
   ungroup() %>% 
   as_tibble()
 df
-#> # A tibble: 16 × 4
+#> # A tibble: 16 脳 4
 #>       id date       outcome follow_up
 #>    <dbl> <date>       <dbl>     <int>
 #>  1     1 2013-01-01       0         1
@@ -96,7 +96,7 @@ library(tidycox)
 
 df %>% group_by(id) %>% 
   mutate(time = cox.time(date = date, outcome = outcome))
-#> # A tibble: 16 × 5
+#> # A tibble: 16 脳 5
 #> # Groups:   id [4]
 #>       id date       outcome follow_up time     
 #>    <dbl> <date>       <dbl>     <int> <drtn>   
@@ -123,7 +123,7 @@ The parameter `date` in `cox.time()` can also accept numeric variables.
 ``` r
 df %>% group_by(id) %>% 
   mutate(time = cox.time(date = follow_up, outcome = outcome))
-#> # A tibble: 16 × 5
+#> # A tibble: 16 脳 5
 #> # Groups:   id [4]
 #>       id date       outcome follow_up  time
 #>    <dbl> <date>       <dbl>     <int> <int>
@@ -213,7 +213,7 @@ Then we fit a cox model of class `coxph` and extract the results with
 library(survival)
 model_1 = coxph(Surv(time, status) ~ x1+x2, test1) 
 cox.result(model_1)
-#> # A tibble: 1 × 10
+#> # A tibble: 1 脳 10
 #>   x.vars term  HR.POS   p.sig estimate std.error         HR HR.LOW HR.UP p.value
 #>   <chr>  <chr> <chr>    <chr>    <dbl>     <dbl>      <dbl>  <dbl> <dbl>   <dbl>
 #> 1 x1     x1    positive no        20.6    23841. 878395377.      0   Inf   0.999
@@ -224,7 +224,7 @@ If we turn `x1+x2` into `x2+x1`, we will return the result of `x2`.
 ``` r
 model_1 = coxph(Surv(time, status) ~ x2+x1, test1) 
 cox.result(model_1)
-#> # A tibble: 1 × 10
+#> # A tibble: 1 脳 10
 #>   x.vars term  HR.POS   p.sig estimate std.error         HR HR.LOW HR.UP p.value
 #>   <chr>  <chr> <chr>    <chr>    <dbl>     <dbl>      <dbl>  <dbl> <dbl>   <dbl>
 #> 1 x2     x2    negative no       -20.4    23841.    1.39e-9      0   Inf   0.999
@@ -275,23 +275,11 @@ The results of `model_2` can be successfully extracted using
 
 ``` r
 cox.result(model_2)
-#> # A tibble: 1 × 10
+#> # A tibble: 1 脳 10
 #>   x.vars  term    HR.POS   p.sig estimate std.error    HR HR.LOW HR.UP  p.value
 #>   <chr>   <chr>   <chr>    <chr>    <dbl>     <dbl> <dbl>  <dbl> <dbl>    <dbl>
 #> 1 ph.ecog ph.ecog positive yes      0.473     0.119  1.61   1.27  2.03 0.000072
 ```
-
-## About Author
-
-Zhiwei Li (<lizhiwei@ccmu.edu.cn>)
-
-Department of Epidemiology and Health Statistics
-
-School of Public Health, Capital Medical University
-
-No.10 Xitoutiao, Youanmen Wai Street
-
-Beijing, 100069
 
 ## :page_with_curl: Acknowledgements
 

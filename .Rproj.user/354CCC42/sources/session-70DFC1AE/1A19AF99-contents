@@ -1,0 +1,24 @@
+Package: tidycox
+Type: Package
+Title: A package that makes building cox models easier
+Version: 0.1.0
+Authors@R: 
+    person(given = "Zhiwei",
+           family = "Li",
+           role = c("aut", "cre"),
+           email = "lizhiwei@ccmu.edu.cn")
+Maintainer: The package maintainer <lizhiwei@ccmu.edu.cn>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.1
+Imports: 
+    bdsmatrix,
+    broom,
+    coxme,
+    dplyr,
+    magrittr,
+    stats,
+    stringr
