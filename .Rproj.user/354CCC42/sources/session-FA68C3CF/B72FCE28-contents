@@ -16,6 +16,7 @@ LazyData: true
 RoxygenNote: 7.2.1
 Imports: 
     broom,
+    coxme,
     dplyr,
     magrittr,
     stats,

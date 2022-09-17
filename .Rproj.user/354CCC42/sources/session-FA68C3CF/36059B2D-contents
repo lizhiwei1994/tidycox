@@ -1,0 +1,59 @@
+
+fit <- coxme(Surv(time, status) ~ ph.ecog + age + (1|inst), lung)
+
+
+if(!class(fit) %in% c('coxph', 'coxme'))
+  stop('class(fit) is not a coxph or coxme ')
+
+formula.terms =
+  
+  if(class(fit) == 'coxph'){
+    
+    as.character(fit$formula)
+    
+  } else {
+    
+    as.character(fit$formula)[1] %>%
+      str_split(pattern = '(?<=~)\\s|\\s(?=~)') %>%
+      unlist() %>%
+      `[`(c(2,1,3))
+  }
+
+air.pollution = formula.terms[3] %>% stringr::str_extract('[\\w\\.]+')
+
+model.result0 = 
+  
+  if(class(fit) == 'coxph'){
+    
+    tidy(fit)
+    
+  } else {
+    
+    extract_coxme_table <- function (mod){
+      estimate <- fixef(mod)
+      nvar <- length(estimate)
+      nfrail <- nrow(mod$var) - nvar
+      std.error <- sqrt(diag(mod$var)[nfrail + 1:nvar])
+      statistic<- round(estimate/std.error, 2)
+      p.value<- signif(1 - pchisq((estimate/std.error)^2, 1), 2)
+      table=data.frame(cbind(estimate,std.error,statistic,p.value))
+      term = rownames(table)
+      table=cbind(term, table)
+      return(table)
+    }
+    
+    extract_coxme_table(fit)
+  }
+  
+model.result1 = model.result0 %>%
+  mutate(
+    HR = exp(estimate),
+    HR.LOW = exp(estimate - 1.96*std.error),
+    HR.UP  = exp(estimate + 1.96*std.error),
+    HR.POS = ifelse(HR >= 1, 'positive', 'negative'),
+    p.sig = ifelse(p.value <= 0.05, 'yes', 'no'),
+    x.vars = air.pollution) %>%
+  filter(grepl(air.pollution, term)) %>%
+  select(x.vars, term, HR.POS, p.sig, estimate, std.error, HR:HR.UP, p.value)
+
+model.result1

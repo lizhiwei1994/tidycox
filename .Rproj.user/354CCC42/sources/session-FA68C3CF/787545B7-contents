@@ -1,0 +1,30 @@
+fit2 <- coxph(Surv(time, status) ~ ph.ecog + age, lung)
+
+t = broom::tidy(fit2)
+t
+
+
+
+fit <- coxme(Surv(time, status) ~ ph.ecog + age + (1|inst), lung)
+extract_coxme_table <- function (mod){
+  estimate <- fixef(mod)
+  nvar <- length(estimate)
+  nfrail <- nrow(mod$var) - nvar
+  std.error <- sqrt(diag(mod$var)[nfrail + 1:nvar])
+  statistic<- round(estimate/std.error, 2)
+  p.value<- signif(1 - pchisq((estimate/std.error)^2, 1), 2)
+  table=data.frame(cbind(estimate,std.error,statistic,p.value))
+  term = rownames(table)
+  table=cbind(term, table)
+  return(table)
+}
+
+dd =extract_coxme_table(fit)
+
+dd
+
+rn = class(rownames(dd))
+
+dd
+
+cbind(rn, dd)

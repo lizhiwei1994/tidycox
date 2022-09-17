@@ -3,11 +3,10 @@
 
 # TidyCox: Make building cox models easier in R <img src="man/figures/logo.png" alt="logo" align="right" height="140" width="120"/>
 
-[![lifecycle](https://img.shields.io/badge/lifecycle-experimental-%23fd8008.svg)](https://lifecycle.r-lib.org/articles/stages.html)
-[![install with
-devtools](https://img.shields.io/badge/install%20with-devtools-brightgreen.svg)](https://cran.r-project.org/web/packages/devtools/index.html)
-[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Flizhiwei1994%2Ftidycox&count_bg=%2379C83D&title_bg=%23555555&icon=sourceforge.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
-[![issues](https://img.shields.io/github/issues/lizhiwei1994/tidycox)](https://github.com/lizhiwei1994/tidycox/issues)
+<!-- [![lifecycle](https://img.shields.io/badge/lifecycle-experimental-%23fd8008.svg)](https://lifecycle.r-lib.org/articles/stages.html) -->
+<!-- [![install with devtools](https://img.shields.io/badge/install%20with-devtools-brightgreen.svg)](https://cran.r-project.org/web/packages/devtools/index.html) -->
+<!-- [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Flizhiwei1994%2Ftidycox&count_bg=%2379C83D&title_bg=%23555555&icon=sourceforge.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com) -->
+<!-- [![issues](https://img.shields.io/github/issues/lizhiwei1994/tidycox)](https://github.com/lizhiwei1994/tidycox/issues) -->
 
 ## :bar_chart: Overview
 
@@ -119,7 +118,7 @@ df %>% group_by(id) %>%
 #> 16     4 2016-01-01       0         4 1095 days
 ```
 
-The parameter date in cox.time can also accept numeric variables
+The parameter `date` in `cox.time()` can also accept numeric variables.
 
 ``` r
 df %>% group_by(id) %>% 
@@ -145,3 +144,81 @@ df %>% group_by(id) %>%
 #> 15     4 2015-01-01       0         3     3
 #> 16     4 2016-01-01       0         4     3
 ```
+
+## `cox.formula()`
+
+`cox.formula()` returns a `formula` by passing in the dependent
+variable, the independent variable of interest, and other covariates,
+respectively. All arguments in `cox.formula()` are **character**
+vectors.
+
+``` r
+y = 'Surv(time, status)'
+x = 'x_interest'
+x.covars = c('covars_1', 'covars_2', 'covars_3')
+
+cox.formula(y = y, x = x, x.covars = x.covars)
+#> Surv(time, status) ~ x_interest + covars_1 + covars_2 + covars_3
+#> <environment: 0x0000027808d8b430>
+```
+
+Note that the dependent variable `y` needs to be formulated using the
+cox model expression, similar to `'Surv(time, status)'`. `time` is the
+survival time and `status` is the ending event. `surv` is the name of
+the function that creates a survival object. Since
+`'Surv(time, status)'` is a character vector, it is not executed.
+
+`cox.formula()` can also generate formulas for the [frailty cox
+model](https://data.princeton.edu/pop509/frailtyr). You need to specify
+the `frailty` parameter in `cox.formula()` (`frailty` is `NULL` by
+default).
+
+``` r
+frailty = '(1|random_intercept_var)'
+
+cox.formula(y = y, x = x, x.covars = x.covars, frailty = frailty)
+#> Surv(time, status) ~ x_interest + covars_1 + covars_2 + covars_3 + 
+#>     (1 | random_intercept_var)
+#> <environment: 0x000002780aa3ad18>
+```
+
+## `cox.result()`
+
+The function `cox.result()` is somewhat similar to the `tidy()` function
+in the [`generics`](https://rdrr.io/cran/generics/man/tidy.html)
+package, but returns more content than it does and is more compatible.
+
+``` r
+library(survival)
+# Create the simplest test data set 
+test1 <- list(time=c(4,3,1,1,2,2,3), 
+              status=c(1,1,1,0,1,1,0), 
+              x=c(0,2,1,1,1,0,0), 
+              sex=c(0,0,0,0,1,1,1)) 
+# Fit a coxph model 
+model_1 = coxph(Surv(time, status) ~ x , test1) 
+
+cox.result(model_1)
+#> # A tibble: 1 × 10
+#>   x.vars term  HR.POS   p.sig estimate std.error    HR HR.LOW HR.UP p.value
+#>   <chr>  <chr> <chr>    <chr>    <dbl>     <dbl> <dbl>  <dbl> <dbl>   <dbl>
+#> 1 x      x     positive no       0.461     0.563  1.59  0.526  4.78   0.413
+```
+
+`cox.result()` returns a `tibble` which contains `10` variables
+respectively.
+
+> **x.vars**: `character` vector. Name of the independent variable of
+> interest. **term**: `character` vector. When the independent variable
+> of interest is numeric, `term` and `x.vars` are consistent. When the
+> independent variable of interest is a factor, `x.vars` will be merged
+> with the factor level in `term`. **HR.POS**: `character` vector.
+> `"positive"` means `HR` \>= 1; `"negetive"` means `HR` \<1. **p.sig**:
+> `character` vector. `"yes"` means `p.value` \<=0.05; `"no"` means
+> `p.value` \> 0.05. **estimate**: `numeric` vector. The coefficient in
+> cox model of `x.vars.` **std.error**: `numeric` vector. The standard
+> error in cox model of `x.vars`. **HR**: `numeric` vector. The hazard
+> ratio in cox model of `x.vars`. HR = exp(estimate) **HR.LOW**:
+> `numeric` vector. Lower limit of 95% confidence interval. **HR.UP**:
+> `numeric` vector. Upper limit of 95% confidence interval. **p.value**:
+> `numeric` vector. P value of `x.vars`.

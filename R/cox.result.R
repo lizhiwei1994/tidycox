@@ -17,7 +17,7 @@
 #' `HR.LOW`: numeric vector. Lower limit of 95% confidence interval.
 #' `HR.UP`: numeric vector. Upper limit of 95% confidence interval.
 #' `p.value`: numeric vector. P value of x.vars.
-#' @import dplyr stringr
+#' @import dplyr stringr coxme
 #' @importFrom broom tidy
 #' @export
 cox.result <- function(fit){
@@ -26,7 +26,7 @@ cox.result <- function(fit){
   if(!class(fit) %in% c('coxph', 'coxme'))
     stop('class(fit) is not a coxph or coxme ')
 
-   formula.terms =
+  formula.terms =
 
     if(class(fit) == 'coxph'){
 
@@ -42,7 +42,29 @@ cox.result <- function(fit){
 
   air.pollution = formula.terms[3] %>% stringr::str_extract('[\\w\\.]+')
 
-  model.result0 = tidy(fit)
+  model.result0 =
+
+    if(class(fit) == 'coxph'){
+
+      tidy(fit)
+
+    } else {
+
+      extract_coxme_table <- function (mod){
+        estimate <- fixef(mod)
+        nvar <- length(estimate)
+        nfrail <- nrow(mod$var) - nvar
+        std.error <- sqrt(diag(mod$var)[nfrail + 1:nvar])
+        statistic<- round(estimate/std.error, 2)
+        p.value<- signif(1 - pchisq((estimate/std.error)^2, 1), 2)
+        table=data.frame(cbind(estimate,std.error,statistic,p.value))
+        term = rownames(table)
+        table=cbind(term, table)
+        return(table)
+      }
+
+      extract_coxme_table(fit)
+    }
 
   model.result1 = model.result0 %>%
     mutate(
