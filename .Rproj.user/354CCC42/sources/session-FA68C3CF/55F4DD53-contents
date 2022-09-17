@@ -56,7 +56,28 @@ df = data.frame(
   outcome = c(0,0,1,1, 0,1,0,0, 1,1,0,0, 0,0,0,0)
 ) %>% 
   mutate(date = as.Date(date)) %>% 
+  group_by(id) %>% 
+  mutate(follow_up = row_number()) %>% 
+  ungroup() %>% 
   as_tibble()
 df
+```
+
+Since we are using a long data format, we need to use the `group_by()` function in the `dplyr` package to group the `id`s and also combine it with the `mutate()` function to calculate the survival time `time`. The survival time of the same `id` is the same.
+
+```{r}
+# devtools::install_github('lizhiwei1994/tidycox')
+library(tidycox)
+
+df %>% group_by(id) %>% 
+  mutate(time = cox.time(date = date, outcome = outcome))
+
+```
+
+The parameter date in cox.time can also accept numeric variables
+
+```{r}
+df %>% group_by(id) %>% 
+  mutate(time = cox.time(date = follow_up, outcome = outcome))
 ```
 
