@@ -1,0 +1,14 @@
+library(survival)
+fit = coxme::coxme(survival::Surv(time, status) ~ ph.ecog + age + (1|inst), cancer)
+
+estimate <- coxme::fixef(fit)
+nvar <- base::length(estimate)
+nfrail <- base::nrow(fit$var) - nvar
+
+
+std.error <- base::sqrt(diag(fit$var)[nfrail + 1:nvar])
+
+
+library(coxme)
+
+std.error <- base::sqrt(diag(fit$var)[nfrail + 1:nvar])

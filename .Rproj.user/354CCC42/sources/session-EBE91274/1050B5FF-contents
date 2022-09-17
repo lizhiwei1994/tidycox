@@ -1,0 +1,88 @@
+cox.result <- function(fit){
+  
+    formula.terms =
+    
+      as.character(fit$formula)[1] %>%
+        str_split(pattern = '(?<=~)\\s|\\s(?=~)') %>%
+        unlist() %>%
+        `[`(c(2,1,3))
+   
+  
+  air.pollution = formula.terms[3] %>% stringr::str_extract('[\\w\\.]+')
+  
+  model.result0 =
+    
+      estimate <- coxme::fixef(fit)
+      nvar <- base::length(estimate)
+      nfrail <- base::nrow(fit$var) - nvar
+      std.error <- base::sqrt(base::diag(fit$var)[nfrail + 1:nvar])
+      statistic<- base::round(estimate/std.error, 2)
+      p.value<- base::signif(1 - stats::pchisq((estimate/std.error)^2, 1), 2)
+      table=base::data.frame(base::cbind(estimate,std.error,statistic,p.value))
+      term = base::rownames(table)
+      table=base::cbind(term, table)
+      
+    model.result1 = model.result0 %>%
+    mutate(
+      HR = exp(estimate),
+      HR.LOW = exp(estimate - 1.96*std.error),
+      HR.UP  = exp(estimate + 1.96*std.error),
+      HR.POS = ifelse(HR >= 1, 'positive', 'negative'),
+      p.sig = ifelse(p.value <= 0.05, 'yes', 'no'),
+      x.vars = air.pollution) %>%
+    filter(grepl(air.pollution, term)) %>%
+    select(x.vars, term, HR.POS, p.sig, estimate, std.error, HR:HR.UP, p.value)
+  
+  model.result1
+  
+}
+
+library(coxme)
+library(survival)
+# Fit a coxme model 
+model_2 <- coxme(Surv(time, status) ~ ph.ecog + age + (1|inst), lung)
+
+cox.result(model_2)
+
+
+fit = model_2
+formula.terms =
+  
+  as.character(fit$formula)[1] %>%
+  str_split(pattern = '(?<=~)\\s|\\s(?=~)') %>%
+  unlist() %>%
+  `[`(c(2,1,3))
+
+
+air.pollution = formula.terms[3] %>% stringr::str_extract('[\\w\\.]+')
+
+model.result0 =
+  
+  estimate <- coxme::fixef(fit)
+nvar <- base::length(estimate)
+nfrail <- base::nrow(fit$var) - nvar
+
+#
+std.error <-sqrt(diag(fit$var)[nfrail + 1:nvar])
+#
+std.error <-base::sqrt(base::diag(fit$var)[nfrail + 1:nvar])
+#
+
+statistic<- base::round(estimate/std.error, 2)
+p.value<- base::signif(1 - stats::pchisq((estimate/std.error)^2, 1), 2)
+table=base::data.frame(base::cbind(estimate,std.error,statistic,p.value))
+term = base::rownames(table)
+table=base::cbind(term, table)
+
+model.result1 = model.result0 %>%
+  mutate(
+    HR = exp(estimate),
+    HR.LOW = exp(estimate - 1.96*std.error),
+    HR.UP  = exp(estimate + 1.96*std.error),
+    HR.POS = ifelse(HR >= 1, 'positive', 'negative'),
+    p.sig = ifelse(p.value <= 0.05, 'yes', 'no'),
+    x.vars = air.pollution) %>%
+  filter(grepl(air.pollution, term)) %>%
+  select(x.vars, term, HR.POS, p.sig, estimate, std.error, HR:HR.UP, p.value)
+
+model.result1

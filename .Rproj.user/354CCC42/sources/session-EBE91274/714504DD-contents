@@ -19,7 +19,7 @@
 #' `p.value`: numeric vector. P value of x.vars.
 #' @importFrom stringr str_split str_extract
 #' @importFrom dplyr filter select
-#' @importFrom coxme fixef diag
+#' @importFrom coxme fixef
 #' @importFrom broom tidy
 #' @export
 cox.result <- function(fit){
@@ -54,14 +54,14 @@ cox.result <- function(fit){
 
 
       estimate <- coxme::fixef(fit)
-      nvar <- base::length(estimate)
-      nfrail <- base::nrow(fit$var) - nvar
-      std.error <- base::sqrt(base::diag(fit$var)[nfrail + 1:nvar])
-      statistic<- base::round(estimate/std.error, 2)
-      p.value<- base::signif(1 - stats::pchisq((estimate/std.error)^2, 1), 2)
-      table=base::data.frame(base::cbind(estimate,std.error,statistic,p.value))
-      term = base::rownames(table)
-      table=base::cbind(term, table)
+      nvar <- length(estimate)
+      nfrail <- nrow(fit$var) - nvar
+      std.error <- sqrt(diag(fit$var)[nfrail + 1:nvar])
+      statistic<- round(estimate/std.error, 2)
+      p.value<- signif(1 - pchisq((estimate/std.error)^2, 1), 2)
+      table=data.frame(cbind(estimate,std.error,statistic,p.value))
+      term = rownames(table)
+      table=cbind(term, table)
 
     }
 

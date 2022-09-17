@@ -3,10 +3,11 @@
 
 # TidyCox: Make building cox models easier in R <img src="man/figures/logo.png" alt="logo" align="right" height="140" width="120"/>
 
-<!-- [![lifecycle](https://img.shields.io/badge/lifecycle-experimental-%23fd8008.svg)](https://lifecycle.r-lib.org/articles/stages.html) -->
-<!-- [![install with devtools](https://img.shields.io/badge/install%20with-devtools-brightgreen.svg)](https://cran.r-project.org/web/packages/devtools/index.html) -->
-<!-- [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Flizhiwei1994%2Ftidycox&count_bg=%2379C83D&title_bg=%23555555&icon=sourceforge.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com) -->
-<!-- [![issues](https://img.shields.io/github/issues/lizhiwei1994/tidycox)](https://github.com/lizhiwei1994/tidycox/issues) -->
+[![lifecycle](https://img.shields.io/badge/lifecycle-experimental-%23fd8008.svg)](https://lifecycle.r-lib.org/articles/stages.html)
+[![install with
+devtools](https://img.shields.io/badge/install%20with-devtools-brightgreen.svg)](https://cran.r-project.org/web/packages/devtools/index.html)
+[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Flizhiwei1994%2Ftidycox&count_bg=%2379C83D&title_bg=%23555555&icon=sourceforge.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
+[![issues](https://img.shields.io/github/issues/lizhiwei1994/tidycox.svg)](https://github.com/lizhiwei1994/tidycox/issues)
 
 ## :bar_chart: Overview
 
@@ -184,9 +185,10 @@ cox.formula(y = y, x = x, x.covars = x.covars, frailty = frailty)
 
 ## `cox.result()`
 
-The function `cox.result()` is somewhat similar to the `tidy()` function
-in the [`generics`](https://rdrr.io/cran/generics/man/tidy.html)
-package, but returns more content than it does and is more compatible.
+The function `cox.result()` is somewhat similar to the
+[`tidy()`](https://rdrr.io/cran/generics/man/tidy.html) function in the
+`generics` package, but returns more content than it does and is more
+compatible.
 
 ``` r
 library(survival)
@@ -222,3 +224,29 @@ respectively.
 > `numeric` vector. Lower limit of 95% confidence interval. **HR.UP**:
 > `numeric` vector. Upper limit of 95% confidence interval. **p.value**:
 > `numeric` vector. P value of `x.vars`.
+
+`cox.result()` can also extract results with object class `coxme`, which
+cannot be done in the
+[`tidy()`](https://rdrr.io/cran/generics/man/tidy.html) function. If you
+use the
+[coxme](https://cran.r-project.org/web/packages/coxme/index.html)
+package to build a frailty cox model will return a `coxme` object.
+
+``` r
+####### EEEEEEEEEEEEEEEEEEEEEEEEEE #####################
+library(coxme)
+# Fit a coxme model 
+model_2 <- coxme(Surv(time, status) ~ ph.ecog + age + (1|inst), lung)
+
+# broom::tidy(model_2)
+
+cox.result(model_2)
+```
+
+## :page_with_curl: Acknowledgements
+
+The hex logo of the `tidycox` package is made by
+[`hexSticker`](https://github.com/GuangchuangYu/hexSticker). the
+`Readme` file format is referenced from the
+[`sigminer`](https://github.com/ShixiangWang/sigminer) package. Thanks
+to the above authors for their help in building the `tidycox` package.

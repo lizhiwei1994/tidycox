@@ -1,0 +1,4 @@
+model_2 <- coxme::coxme(Surv(time, status) ~ ph.ecog + age+ (1|inst), lung)
+
+
+cox.result(model_2)
