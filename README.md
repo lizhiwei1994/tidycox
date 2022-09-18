@@ -281,7 +281,7 @@ cox.result(model_2)
 #> 1 ph.ecog ph.ecog positive yes      0.473     0.119  1.61   1.27  2.03 0.000072
 ```
 
-## About Author
+## :page_with_curl: About Author
 
 Zhiwei Li (<lizhiwei@ccmu.edu.cn>)
 
@@ -292,6 +292,22 @@ School of Public Health, Capital Medical University
 No.10 Xitoutiao, Youanmen Wai Street
 
 Beijing, 100069
+
+## :page_with_curl: Citation
+
+If my R package is useful to you, please cite it.
+
+Li Z (2022). *tidycox: A package that makes building cox models easier.*
+R package version 0.1.0.
+
+``` r
+@Manual{,
+  title = {tidycox: A package that makes building cox models easier},
+  author = {Zhiwei Li},
+  year = {2022},
+  note = {R package version 0.1.0},
+}
+```
 
 ## :page_with_curl: Acknowledgements
 

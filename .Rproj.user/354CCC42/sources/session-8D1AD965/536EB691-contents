@@ -171,7 +171,7 @@ The results of `model_2` can be successfully extracted using `cox.result()`.
 cox.result(model_2)
 ```
 
-## About Author
+## :page_with_curl: About Author
 
 Zhiwei Li (lizhiwei@ccmu.edu.cn)
 
@@ -182,6 +182,22 @@ School of Public Health, Capital Medical University
 No.10 Xitoutiao, Youanmen Wai Street
 
 Beijing, 100069
+
+## :page_with_curl: Citation
+
+If my R package is useful to you, please cite it.
+
+Li Z (2022). *tidycox: A package that makes building cox models easier.* R package version 0.1.0.
+
+```{r eval=FALSE}
+@Manual{,
+  title = {tidycox: A package that makes building cox models easier},
+  author = {Zhiwei Li},
+  year = {2022},
+  note = {R package version 0.1.0},
+}
+```
+
 
 ## :page_with_curl: Acknowledgements
 
